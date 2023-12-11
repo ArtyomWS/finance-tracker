@@ -1,0 +1,1 @@
+export const transactionPeriods = ['Yearly', 'Monthly', 'Daily'];
