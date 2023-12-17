@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-useHead({
+/* useHead({
   link: [
     {
       rel: 'preconnect',
@@ -20,11 +20,10 @@ useHead({
       crossorigin: ''
     }
   ]
-})
+}) */
 </script>
 <style>
 body {
   @apply dark:bg-gray-900 bg-white;
-  font-family: 'Inter';
 }
 </style>
