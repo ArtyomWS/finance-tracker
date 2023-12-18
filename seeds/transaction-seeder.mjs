@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from '@supabase/supabase-js'
 import { faker } from '@faker-js/faker'
 import 'dotenv/config'
 
