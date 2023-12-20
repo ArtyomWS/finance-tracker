@@ -39,11 +39,14 @@
 
 <script setup>
 import { useUaeFetchTransactions } from '~/composables/uaeFetchTransactions';
+import { useUseSelectedTimePeriod } from '~/composables/useSelectedTimePeriod';
 import { transactionPeriods } from '~/constants';
 
 const selected = ref(transactionPeriods[1]);
 const isOpen = ref(false)
-const { pending, refresh, transactions: {
+const dates = useUseSelectedTimePeriod(selectedView)
+
+const { isLoading, refresh, transactions: {
   incomeCount,
   outcomeCount,
   incomeTotal,
