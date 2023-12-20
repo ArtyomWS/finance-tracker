@@ -19,16 +19,16 @@
       </div>
     </div>
     <div>
-      <TransactionModal v-model="isOpen" />
+      <TransactionModal v-model="isOpen" @saved="refresh()" />
       <UButton icon="i-heroicons-plus-circle" color="white" variant="solid" label="Add" @click="isOpen = true"/>
     </div>
   </section>
 
   <section v-if="!isLoading">
-    <div v-for="(transactionsOnDay, date) in transactionsGroupByDate" :key="date" class="mb-10">
+    <div v-for="(transactionsOnDay, date) in byDate" :key="date" class="mb-10">
       <DailyTransactionSummary :date="date" :transactions="transactionsOnDay"/>
-      <Transactions v-for="transaction in transactions" :key="transaction.id" :transaction="transaction" 
-        @deleted="refreshTransactions"/>
+      <Transactions v-for="transaction in transactionsOnDay" :key="transaction.id" :transaction="transaction" 
+        @deleted="refresh()"/>
     </div>
   </section>
   <section v-else>
@@ -38,69 +38,23 @@
 </template>
 
 <script setup>
+import { useUaeFetchTransactions } from '~/composables/uaeFetchTransactions';
 import { transactionPeriods } from '~/constants';
+
 const selected = ref(transactionPeriods[1]);
-const supabaseClient = useSupabaseClient()
-const transactions = ref([])
-const isLoading = ref(false)
 const isOpen = ref(false)
-
-const income = computed(
-  () => transactions.value.filter(t => t.type === 'Income')
-)
-
-const outcome = computed(
-  () => transactions.value.filter(t => t.type === 'Outcome')
-)
-
-const incomeCount = computed(() => income.value.length)
-const outcomeCount = computed(() => outcome.value.length)
-
-const incomeTotal = computed(
-  () => income.value.reduce((total, transaction) => total + transaction.amount, 0)
-)
-
-const outcomeTotal = computed(
-  () => outcome.value.reduce((total, transaction) => total + transaction.amount, 0)
-)
-
-const fetchTransactions = async () => {
-  isLoading.value = true
-  try {
-    const { data } = await useAsyncData('transactions', async () => {
-      const { data, error } = await supabaseClient
-        .from('transactions')
-        .select()
-
-      if (error) {
-        return []
-      }
-      return data
-    })
-    return data.value
-  } finally {
-    isLoading.value = false
+const { pending, refresh, transactions: {
+  incomeCount,
+  outcomeCount,
+  incomeTotal,
+  outcomeTotal,
+  grouped: {
+    byDate
   }
-}
-const refreshTransactions = async () => transactions.value = await fetchTransactions()
+}} = useUaeFetchTransactions()
 
-await refreshTransactions()
+await refresh()
 
-transactions.value = await fetchTransactions()
-
-const transactionsGroupByDate = computed(() => {
-  let grouped = {}
-
-  for (const transaction of transactions.value) {
-    const date = new Date(transaction.created_at).toISOString().split('T')[0]
-
-    if (!grouped[date]) {
-      grouped[date] = []
-    }
-    grouped[date].push(transaction)
-  }
-  return grouped
-})
 </script>
 
 <style>

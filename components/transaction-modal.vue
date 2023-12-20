@@ -5,7 +5,7 @@
         <template #header>
           Add Transaction
         </template>
-        <UForm :state="state" :schema="validationSchema" ref="form" @submit.prevent="save">
+        <UForm :state="state" :schema="validationSchema" ref="form" @submit="save">
           <UFormGroup :required="true" label="Transaction type" name="type" class="mb-4">
             <USelect placeholder="Transaction type" :options="types" v-model="state.type"/>
           </UFormGroup>
@@ -25,7 +25,7 @@
           <UFormGroup :required="true" label="Ccategory" name="category" class="mb-4" v-if="state.type === 'Outcome'">
             <USelect placeholder="Category" :options="categories" v-model="state.category"/>
           </UFormGroup>
-          <UButton type="submit" color="black" variant="solid" label="Save"/>
+          <UButton type="submit" color="black" variant="solid" label="Save" :loading="isLoading"/>
         </UForm>
       </UCard>
     </UModal>
@@ -40,7 +40,7 @@ import { z } from 'zod'
 const props = defineProps({
   modelValue: Boolean
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'saved'])
 
 const defultValidationSchema = z.object({
   created_at: z.string(),
@@ -53,7 +53,7 @@ const incomeSchema = z.object({
 })
 
 const outcomeSchema = z.object({
-  type: z.literal('Oucome'),
+  type: z.literal('Outcome'),
   category: z.enum(categories)
 })
 
@@ -63,9 +63,40 @@ const validationSchema = z.intersection(
 )
 
 const form = ref()
+const isLoading = ref(false)
+const supabaseClient = useSupabaseClient()
+const toast = useToast()
 
 const save = async () => {
-  form.value.validate()
+  if (form.value.errors.length) {
+    return
+  }
+  isLoading.value = true
+  try {
+    const { error } = await supabaseClient
+      .from('transactions')
+      .upsert({ ...state.value })
+
+    if (!error) {
+      toast.add({
+        title: 'transaction Saved',
+        icon: 'i-heroicons-check-circle'
+      })
+      isOpen = false
+      emit('saved')
+    }
+
+  } catch (e) {
+    toast.add({
+      title: 'Transaction not saved',
+      description: e.message,
+      icon: 'i-heroicons-exclamation-circle'
+    })
+  } finally {
+    isLoading.value = false
+  }
+
+  //form.value.validate()
 }
 
 const initialState = {

@@ -4,7 +4,7 @@
       {{  date }}
     </div>
     <div class="flex items-center justify-end space-x-2">
-
+      {{ currency }}
     </div>
   </div>
 </template>
