@@ -1,4 +1,4 @@
-export const useUaeFetchTransactions = () => {
+export const useUaeFetchTransactions = (period) => {
   const supabaseClient = useSupabaseClient()
   const transactions = ref([])
   const isLoading = ref(false)
@@ -25,10 +25,12 @@ export const useUaeFetchTransactions = () => {
   const fetchTransactions = async () => {
   isLoading.value = true
   try {
-    const { data } = await useAsyncData('transactions', async () => {
+    const { data } = await useAsyncData(`transactions-${period.value.from.toDateString()}-${period.value.to.toDateString()}`, async () => {
       const { data, error } = await supabaseClient
         .from('transactions')
         .select()
+        .gte('created_at', period.value.from.toISOString())
+        .lte('created_at', period.value.to.toISOString())
         .order('created_at', {ascending: false})
 
       if (error) {
@@ -42,6 +44,8 @@ export const useUaeFetchTransactions = () => {
     }
   }
   const refresh = async () => transactions.value = await fetchTransactions()
+
+  watch(period, async () => await refresh())
 
   const transactionsGroupByDate = computed(() => {
   let grouped = {}

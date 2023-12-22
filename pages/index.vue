@@ -6,8 +6,8 @@
     </div>
   </section>
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 sm:gap-16 mb-10">
-    <Trand color="green" title="Income" :amount="incomeTotal" :last-amount="3000" :loading="false"/>
-    <Trand color="red" title="Outcome" :amount="outcomeTotal" :last-amount="3000" :loading="false"/>
+    <Trand color="green" title="Income" :amount="incomeTotal" :last-amount="prevIncomeTotal" :loading="false"/>
+    <Trand color="red" title="Outcome" :amount="outcomeTotal" :last-amount="prevOutcomeTotal" :loading="false"/>
     <Trand color="green" title="Income" :amount="1000" :last-amount="3000" :loading="false"/>
     <Trand color="red" title="Income" :amount="3000" :last-amount="3000" :loading="isLoading"/>
   </section>
@@ -44,7 +44,7 @@ import { transactionPeriods } from '~/constants';
 
 const selected = ref(transactionPeriods[1]);
 const isOpen = ref(false)
-const dates = useUseSelectedTimePeriod(selectedView)
+const {current, previous} = useUseSelectedTimePeriod(selected)
 
 const { isLoading, refresh, transactions: {
   incomeCount,
@@ -54,9 +54,15 @@ const { isLoading, refresh, transactions: {
   grouped: {
     byDate
   }
-}} = useUaeFetchTransactions()
-
+} } = useUaeFetchTransactions(current)
 await refresh()
+
+const { refresh: refreshPrevious, transactions: {
+  incomeCount: prevIncomeTotal,
+  outcomeCount: prevOutcomeTotal,
+} } = useUaeFetchTransactions(previous)
+await refreshPrevious()
+
 
 </script>
 
